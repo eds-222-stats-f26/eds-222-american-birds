@@ -1,0 +1,36 @@
+---
+title: "American Birds"
+format: html
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(googlesheets4)
+
+sheet_url <- "https://docs.google.com/spreadsheets/d/1e0eL4NFmGThSgUOGeWmG45urZGSrfKUgX-94tiZ6j6A/edit#gid=1253615536"
+
+# Columns by position: C = value of X, E = estimated % of US bird species in CA
+birds <- read_sheet(sheet_url) |>
+  select(x = 3, ca_pct = 5) |>
+  mutate(x = factor(x, levels = c(50, 70)),
+         ca_pct = as.numeric(ca_pct))
+```
+
+## Visualize
+
+```{r}
+ggplot(birds, aes(x = x, y = ca_pct)) +
+  geom_jitter(width = 0.15, height = 0) +
+  labs(x = "X",
+       y = "What percentage of US bird species do you think\nare found in California?") +
+  theme_bw(18)
+```
+
+## Linear regression
+
+```{r}
+birds_lm <- lm(ca_pct ~ x, data = birds)
+summary(birds_lm)
+```
+
