@@ -3,6 +3,10 @@ title: "American Birds"
 format: html
 ---
 
+## Load data
+
+Read the contents of the form responses.
+
 ```{r}
 #| message: false
 library(tidyverse)
@@ -13,24 +17,61 @@ sheet_url <- "https://docs.google.com/spreadsheets/d/1e0eL4NFmGThSgUOGeWmG45urZG
 # Columns by position: C = value of X, E = estimated % of US bird species in CA
 birds <- read_sheet(sheet_url) |>
   select(x = 3, ca_pct = 5) |>
-  mutate(x = factor(x, levels = c(50, 70)),
-         ca_pct = as.numeric(ca_pct))
+  mutate(x = factor(x, levels = c(50, 70)), ca_pct = as.numeric(ca_pct))
 ```
 
-## Visualize
+## Visualize data
+
+Visualize the two category levels and their relationship to the continuous response.
 
 ```{r}
 ggplot(birds, aes(x = x, y = ca_pct)) +
-  geom_jitter(width = 0.15, height = 0) +
-  labs(x = "X",
-       y = "What percentage of US bird species do you think\nare found in California?") +
+  geom_point(position = position_jitter(width = 0.15, height = 0, seed = 222)) +
+  labs(
+    x = "X",
+    y = "What percentage of US bird species\ndo you think are found in California?"
+  ) +
   theme_bw(18)
 ```
 
 ## Linear regression
+
+Fit a linear regression model to the data and summarize it.
 
 ```{r}
 birds_lm <- lm(ca_pct ~ x, data = birds)
 summary(birds_lm)
 ```
 
+## Visualize coefficients
+
+Visualize the data with the coefficients from the model
+
+```{r}
+beta_0 <- coef(birds_lm)[1]
+beta_1 <- coef(birds_lm)[2]
+ggplot(birds, aes(x = x, y = ca_pct)) +
+  geom_point(position = position_jitter(width = 0.15, height = 0, seed = 222)) +
+  annotate("point", x = 1, y = beta_0, size = 5, color = "cornflowerblue") +
+  annotate(
+    "point",
+    x = 2,
+    y = beta_0 + beta_1,
+    size = 5,
+    color = "cornflowerblue"
+  ) +
+  annotate(
+    "segment",
+    x = 1.5,
+    xend = 1.5,
+    y = beta_0,
+    yend = beta_0 + beta_1,
+    linewidth = 4,
+    color = "cornflowerblue"
+  ) +
+  labs(
+    x = "X",
+    y = "What percentage of US bird species\ndo you think are found in California?"
+  ) +
+  theme_bw(18)
+```
